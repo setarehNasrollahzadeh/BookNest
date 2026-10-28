@@ -1,0 +1,22 @@
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.slnLaunch.user
+
+# Build outputs
+**/bin/
+**/obj/
+
+# Development settings - may contain secrets
+**/appsettings.Development.json
+
+# Local environment files
+.env
+.env.*
+
+# Keep an example environment file if needed
+!.env.example

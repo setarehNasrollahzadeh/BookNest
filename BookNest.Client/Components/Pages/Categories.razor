@@ -1,0 +1,329 @@
+﻿@page "/categories"
+
+@using BookNest.Client.Models.Categories
+@using BookNest.Client.Services.Categories
+@using Microsoft.AspNetCore.Components
+@inject CategoriesApiService CategoriesService
+
+<PageTitle>Categories | BookNest</PageTitle>
+
+
+<!-- Content -->
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+	<!-- DataTable with Buttons -->
+	<div class="card">
+		<div class="card-datatable table-responsive pt-0">
+			<div class="dataTables_wrapper dt_bootstrap5 no-footer">
+				<!-- Card Header -->
+				<div class="card-header flex-column flex-md-row">
+					<div class="head-label text-center">
+						<h5 class="card-title mb-0">
+							Categories
+							</h5>
+					</div>
+					<div class="dt-action-buttons text-end pt-3 pt-md-0">
+						<div class="dt-buttons btn-group flex-wrap">
+							<!-- Export button -->
+							<div class="btn-group">
+								<button class="btn btn-secondary buttons-collection dropdown-toggle btn-label-primary me-2" type="button">
+									<span>
+										<i class="ti ti-file-export me-sm-1"></i>
+										<span class="d-none d-sm-inline-block">
+											Export
+										</span>
+									</span>
+									<span class="dt-down-arrow"></span>
+								</button>
+							</div>
+							<!-- Add new category -->
+							<button class="btn btn-secondary create-new btn-primary" type="button">
+								<span>
+									<i class="ti ti-plus me-sm-1"></i>
+									<span class="d-none d-sm-inline-block">
+										Add New Record
+									</span>
+								</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<!-- / Card header -->
+
+
+				<!-- Table controls -->
+				<div class="row">
+					<div class="col-sm-12 col-md-6">
+						<div class="dataTables_length">
+							<label>
+								Show
+								<select class="form-select" @bind="PageSize">
+									<option value="7">7</option>
+									<option value="10">10</option>
+									<option value="25">25</option>
+									<option value="50">50</option>
+									<option value="75">75</option>
+									<option value="100">100</option>
+								</select>
+								entries
+							</label>
+						</div>
+					</div>
+					<div class="col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end">
+						<div class="dataTables_filter">
+							<label>
+								Search:
+								<input type="search" class="form-control" placeholder="Search Categories..." @bind="SearchTerm" @bind:event="oninput" />
+							</label>
+						</div>
+					</div>
+				</div>
+				<!-- / Table controls -->
+
+
+				<!-- Categories table -->
+				<table class="datatables-basic table dataTable no-footer dtr-column">
+					<thead>
+						<tr>
+							<th style="width: 23px;">
+								<input type="checkbox" class="form-check-input" aria-label="Select all categories"/>
+							</th>
+							<th>
+								ID
+							</th>
+							<th>
+								Name
+							</th>
+							<th>
+								Actions
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						@if (IsLoading)
+						{
+							<tr>
+								<td colspan="5" class="text-center py-4">
+									<div class="spinner-border text-primary" role="status">
+										<span class="visually-hidden">
+											Loading...
+										</span>
+									</div>
+									<div class="mt-2">
+										Loading categories...
+									</div>
+								</td>
+							</tr>
+						}
+						else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+						{
+							<tr>
+								<td colspan="5" class="text-center text-danger py-4">
+									@ErrorMessage
+
+									<div class="mt-2">
+										<button class="btn btn-sm btn-outline-primary" @onclick="LoadCategoriesAsync">
+											Try Again
+										</button>
+									</div>
+								</td>
+							</tr>
+						}
+						else if (!FilteredCategories.Any())
+						{
+							<tr>
+								<td colspan="5"
+									class="text-center py-4">
+
+									No categories found.
+
+								</td>
+							</tr>
+						}
+						else
+						{
+							@foreach (var category in PagedCategories)
+							{
+								<tr>
+									<td>
+										<input type="checkbox" class="form-check-input" aria-label="@($"Select category {category.Title}")" />
+									</td>
+									<td>
+										@category.CategoryId
+									</td>
+
+									<td>
+										@category.Title
+									</td>
+									<td>
+										<div class="d-inline-flex">
+											<button type="button" class="btn btn-sm btn-icon" title="Edit category">
+												<i class="ti ti-pencil"></i>
+											</button>
+
+											<button type="button" class="btn btn-sm btn-icon" title="Delete category">
+												<i class="ti ti-trash"></i>
+											</button>
+										</div>
+									</td>
+								</tr>
+							}
+						}
+
+					</tbody>
+				</table>
+				<!-- / Categories table -->
+
+
+				<!-- Table footer -->
+				<div class="row">
+					<div class="col-sm-12 col-md-6">
+						<div class="dataTables_info" role="status" aria-live="polite">
+							@if (!IsLoading&&string.IsNullOrWhiteSpace(ErrorMessage))
+							{
+								<span>
+									Showing @ShowingFrom to @ShowingTo of @FilteredCategories.Count entries
+								</span>
+							}	
+						</div>
+					</div>
+					<div class="col-sm-12 col-md-6">
+						<div class="dataTables_paginate">
+
+							<ul class="pagination">
+								<li class="paginate_button page-item @(CurrentPage <= 1 ? "disabled" : "")">
+
+									<button type="button"
+											class="page-link"
+											disabled="@(CurrentPage <= 1)"
+											@onclick="PreviousPage">
+										Previous
+									</button>
+								</li>
+
+								<li class="paginate_button page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+									<button type="button"
+											class="page-link"
+											disabled="@(CurrentPage >= TotalPages)"
+											@onclick="NextPage">
+										Next
+									</button>
+								</li>
+							</ul>
+
+						</div>
+					</div>
+				</div>
+				<!-- / Table footer -->
+
+
+
+			</div>
+		</div>
+	</div>
+	<!--/ DataTable with Buttons -->
+
+
+</div>
+<!-- / Content -->
+
+
+<div class="content-backdrop fade"></div>
+
+
+
+
+@code {
+	private List<CategoryResponse> CategoryList = new();
+
+	private bool IsLoading = true;
+
+	private string? ErrorMessage;
+
+	private string SearchTerm = string.Empty;
+
+	private int PageSize = 10;
+
+	private int CurrentPage = 1;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadCategoriesAsync();
+	}
+
+
+	private async Task LoadCategoriesAsync()
+	{
+		IsLoading = true;
+		ErrorMessage = null;
+
+		try
+		{
+			CategoryList = await CategoriesService.GetAllAsync();
+
+			CurrentPage = 1;
+		}
+		catch (Exception)
+		{
+			ErrorMessage = "Failed to load categories. Please try again.";
+		}
+		finally
+		{
+			IsLoading = false;
+		}
+	}
+
+
+	private List<CategoryResponse> FilteredCategories =>
+	CategoryList
+		.Where(category => 
+			string.IsNullOrWhiteSpace(SearchTerm)
+				|| (category.Title?.Contains(
+					SearchTerm,
+					StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+
+
+
+	private List<CategoryResponse> PagedCategories =>
+	FilteredCategories
+		.Skip((CurrentPage - 1) * PageSize)
+		.Take(PageSize)
+		.ToList();
+
+
+
+	private int TotalPages =>
+	   Math.Max(1, (int)Math.Ceiling(
+		   FilteredCategories.Count / (double)PageSize));
+
+
+	private int ShowingFrom =>
+		FilteredCategories.Count == 0
+			? 0
+			: (CurrentPage - 1) * PageSize + 1;
+
+
+	private int ShowingTo =>
+		Math.Min(CurrentPage * PageSize, FilteredCategories.Count);
+
+
+	private void PreviousPage()
+	{
+		if (CurrentPage > 1)
+		{
+			CurrentPage--;
+		}
+	}
+
+
+	private void NextPage()
+	{
+		if (CurrentPage < TotalPages)
+		{
+			CurrentPage++;
+		}
+	}
+
+} 
